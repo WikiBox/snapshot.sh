@@ -7,7 +7,7 @@
 # Don't store anything but snapshots in $destination
 
 # Change these variables to customize:
-destination='/sharedfolders/nas1/snapshots/nas0/local_media'
+destination='/sharedfolders/nas3/snapshots/nas0/local_media'
 source='/srv/nfs/nas0/local_media'
 snapshot_name=local_media_$(date +%F_%T)
 
@@ -16,25 +16,28 @@ keep_daily=7    # keep this number of daily backups
 keep_weekly=4   # keep this number of weekly backups
 keep_monthly=4  # keep this number of monthly backups
 
+# Announcement
+echo "Snapshot: " "$source" to "$destination"
+
 # Delete earlier failed attempt at making a snapshot, if any
-rm -rf "$destination"/unfinished		
+# rm -rf "$destination"/.unfinished		
 
 # Find latest snapshot, if any
 latest_snapshot=$(ls -rt "$destination" | tail -1)
 
 # Create folder for this snapshot, unfinished so far...
-mkdir -p "$destination"/unfinished
+mkdir -p "$destination"/.unfinished
 
 # Grab new snapshot. Use rsync to create hard links to files already in 
 # latest previous snapshot(s)
-rsync -a --delete --stats \
+rsync -a --delete --stats --inplace \
       --link-dest="$destination"/"$latest_snapshot" \
       "$source" \
-      "$destination"/unfinished > "$destination"/unfinished/rsync.log 
+      "$destination"/.unfinished > "$destination"/.unfinished/rsync.log 
 
 # Finished!
 if [ $? -eq 0 ]; then
-	mv "$destination"/unfinished "$destination"/"$snapshot_name"
+	mv "$destination"/.unfinished "$destination"/"$snapshot_name"
 else
 	exit 1
 fi
@@ -109,7 +112,6 @@ purge ()
 		curr=$1
 		next1=$2
 		next2=$3
-		purged=false
 
 		# really purge snapshots
 		while [[ $(older "$next1" "$days_stop") && $(can_purge_next "$curr" "$next2" "$days_interval") ]]; do
@@ -122,7 +124,7 @@ purge ()
 	done
 }
 
-# calcultate boundaries between daily/weekly/monthly
+# calculate boundaries between daily/weekly/monthly
 ((max_age_daily = keep_daily))
 ((max_age_weekly = max_age_daily + 7 * keep_weekly))
 ((max_age_monthly = max_age_weekly + 30 * keep_monthly))
@@ -137,4 +139,3 @@ purge $max_age_monthly $max_age_weekly 30 $(ls -rt "$destination")
 purge $max_age_weekly $max_age_daily 7 $(ls -rt "$destination")
 
 exit 0
-
