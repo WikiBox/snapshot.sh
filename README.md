@@ -21,8 +21,8 @@ As can be seen above this script was used to update a snapshot of local_media fr
 
 The script creates a full snapshot backup copy by hardlinking unmodified files from the previous snapshot and copying over only modified files, if any. This means that the script is usually very fast. A snapshot with several TB of data and many thousands of files and folders can be updated in about a minute or so, if no files need to be copied. 
 
+The script, as it is here, uses rsync in local mode. It might be used between two filesystems on the same server or on two servers via a NFS mount. But it should also be very easy to modify the script to run on the backup server and create snapshots of a remote server over ssh. 
+
 This is of course inspired by "Easy Automated Snapshots, Mike Rubel". 
 
 See: http://www.mikerubel.org/computers/rsync_snapshots/
-
-
